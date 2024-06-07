@@ -2909,6 +2909,12 @@ static int mpegts_resync(AVFormatContext *s, int seekback, const uint8_t *curren
         return 0;
     }
 
+    // special case for 192-byte packets which can alias 0x47 in the timecode
+    if (ts->raw_packet_size == TS_DVHS_PACKET_SIZE && current_packet[4] == 0x47 && pos >= TS_PACKET_SIZE) {
+        avio_seek(pb, 4 - TS_PACKET_SIZE, SEEK_CUR);
+        return 0;
+    }
+
     avio_seek(pb, -back, SEEK_CUR);
 
     for (i = 0; i < ts->resync_size; i++) {
